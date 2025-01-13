@@ -1,6 +1,3 @@
-const { ethers } = require('ethers');
-const { wallet } = require("./wallet");
-
 const contractAddress = '0x5C80B3E7f8648Bd107f76bBfc37b3E50f179b2Ff';
 const contractAbi = [
     {
@@ -448,5 +445,4 @@ const contractAbi = [
     }
   ];
 
-const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
-module.exports = { contract, contractAddress, contractAbi };
+module.exports = { contractAddress, contractAbi };
