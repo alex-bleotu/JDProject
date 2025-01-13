@@ -448,5 +448,5 @@ const contractAbi = [
     }
   ];
 
-const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, wallet);
+const contract = new ethers.Contract(contractAddress, contractAbi, wallet);
 module.exports = { contract, contractAddress, contractAbi };
