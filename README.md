@@ -1,6 +1,7 @@
 
 # RecycleChain
-**Platformă inovatoare pentru colectarea deșeurilor reciclabile**
+
+**Platformă inovatoare pentru colectarea deșeurilor reciclabile - https://recyclechain.alexbleotu.com/**
 
 ## Descriere Generală
 RecycleChain este o aplicație web inovatoare care combină gamificarea, stocarea datelor și tehnologiile emergente, precum Web3, pentru a încuraja colectarea și reciclarea deșeurilor. Platforma urmărește să educe utilizatorii, să ofere un mod interactiv de implicare și să stimuleze obiceiuri sustenabile prin recompense digitale și instrumente accesibile.
