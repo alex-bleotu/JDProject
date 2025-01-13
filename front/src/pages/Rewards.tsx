@@ -54,17 +54,6 @@ export function Rewards() {
         );
     }
 
-    if (error) {
-        return (
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                <div className="text-center text-red-600 dark:text-red-400">
-                    <p className="text-xl">Error loading NFTs</p>
-                    <p className="mt-2">{error}</p>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             <div className="mb-12">
@@ -103,52 +92,54 @@ export function Rewards() {
                 </div>
             </div>
 
-            <div>
-                <h2 className="text-2xl font-semibold text-secondary-800 dark:text-secondary-200 mb-6">
-                    NFT Collection
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-                    {nfts?.map((nft: any) => (
-                        <div
-                            key={nft.id}
-                            onClick={() =>
-                                setSelectedNFT(
-                                    selectedNFT?.id === nft.id ? null : nft
-                                )
-                            }
-                            className={`bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-secondary-200 dark:border-secondary-700 transition-all duration-300 cursor-pointer hover:shadow-lg ${
-                                selectedNFT?.id === nft.id
-                                    ? "ring-2 ring-primary-500"
-                                    : ""
-                            }`}>
-                            <div className="relative">
-                                <img
-                                    src={nft[2]}
-                                    alt={nft[0]}
-                                    className="object-fit"
-                                    style={{ aspectRatio: 1 }}
-                                />
-                                <div className="absolute top-4 right-4">
-                                    <span
-                                        className={`px-2.5 py-1 rounded-full text-xs font-medium ${rarityColors.Rare}`}>
-                                        New
-                                    </span>
+            {!error && (
+                <div>
+                    <h2 className="text-2xl font-semibold text-secondary-800 dark:text-secondary-200 mb-6">
+                        NFT Collection
+                    </h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+                        {nfts?.map((nft: any) => (
+                            <div
+                                key={nft.id}
+                                onClick={() =>
+                                    setSelectedNFT(
+                                        selectedNFT?.id === nft.id ? null : nft
+                                    )
+                                }
+                                className={`bg-white dark:bg-gray-800 rounded-xl overflow-hidden shadow-sm border border-secondary-200 dark:border-secondary-700 transition-all duration-300 cursor-pointer hover:shadow-lg ${
+                                    selectedNFT?.id === nft.id
+                                        ? "ring-2 ring-primary-500"
+                                        : ""
+                                }`}>
+                                <div className="relative">
+                                    <img
+                                        src={nft[2]}
+                                        alt={nft[0]}
+                                        className="object-fit"
+                                        style={{ aspectRatio: 1 }}
+                                    />
+                                    <div className="absolute top-4 right-4">
+                                        <span
+                                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${rarityColors.Rare}`}>
+                                            New
+                                        </span>
+                                    </div>
+                                </div>
+                                <div className="p-6">
+                                    <div className="mb-4">
+                                        <h3 className="text-lg font-semibold text-secondary-800 dark:text-secondary-200 mb-1">
+                                            {nft[0]}
+                                        </h3>
+                                        <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                                            {nft[1]}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="p-6">
-                                <div className="mb-4">
-                                    <h3 className="text-lg font-semibold text-secondary-800 dark:text-secondary-200 mb-1">
-                                        {nft[0]}
-                                    </h3>
-                                    <p className="text-sm text-secondary-600 dark:text-secondary-400">
-                                        {nft[1]}
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
