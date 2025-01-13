@@ -1,174 +1,240 @@
-import React, { useState, useEffect } from 'react';
-import { LogOut, Wallet, User, Shield, AlertCircle } from 'lucide-react';
-import { useAccount, useConnect, useDisconnect } from 'wagmi';
-import { supabase } from '../lib/supabase';
+import { LogOut, Shield, User, Wallet } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useAccount, useConnect, useDisconnect } from "wagmi";
+import { supabase } from "../lib/supabase";
 
 export function Settings() {
-  const { address, isConnected } = useAccount();
-  const { connect, connectors } = useConnect();
-  const { disconnect } = useDisconnect();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [userEmail, setUserEmail] = useState<string>('');
-  const [message, setMessage] = useState<{
-    type: 'success' | 'error';
-    text: string;
-  } | null>(null);
+    const { address, isConnected } = useAccount();
+    const { connect, connectors } = useConnect();
+    const { disconnect } = useDisconnect();
+    const [loading, setLoading] = useState(false);
+    const [profile, setProfile] = useState<any>(null);
+    const [userEmail, setUserEmail] = useState<string>("");
+    const [message, setMessage] = useState<{
+        type: "success" | "error";
+        text: string;
+    } | null>(null);
 
-  useEffect(() => {
-    loadProfile();
-  }, []);
+    useEffect(() => {
+        loadProfile();
+    }, []);
 
-  useEffect(() => {
-    if (address && profile?.id) {
-      updateWalletAddress(address);
-    }
-  }, [address, profile]);
-
-  async function loadProfile() {
-    try {
-      setLoading(true);
-      setError(null);
-
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
-
-      if (userError) throw userError;
-      if (!user) {
-        setError('User not found');
-        return;
-      }
-
-      setUserEmail(user.email || '');
-
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (profileError) {
-        if (profileError.code === 'PGRST116') {
-          // Profile doesn't exist, create it
-          const { data: newProfile, error: createError } = await supabase
-            .from('profiles')
-            .upsert([{ id: user.id }])
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          setProfile(newProfile);
-        } else {
-          throw profileError;
+    useEffect(() => {
+        if (address && profile?.id) {
+            updateWalletAddress(address);
         }
-      } else {
-        setProfile(profile);
-      }
-    } catch (error: any) {
-      console.error('Error loading profile:', error);
-      setError(error.message || 'Failed to load profile');
-    } finally {
-      setLoading(false);
+    }, [address, profile]);
+
+    async function loadProfile() {
+        try {
+            const {
+                data: { user },
+            } = await supabase.auth.getUser();
+            if (!user) return;
+
+            setUserEmail(user.email || "");
+
+            const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("*")
+                .eq("id", user.id)
+                .single();
+
+            if (error) throw error;
+            setProfile(profile);
+        } catch (error) {
+            console.error("Error loading profile:", error);
+        }
     }
-  }
 
-  async function updateWalletAddress(address: string) {
-    try {
-      setLoading(true);
-      setError(null);
+    async function updateWalletAddress(address: string) {
+        try {
+            setLoading(true);
+            const { error } = await supabase
+                .from("profiles")
+                .update({ wallet_address: address })
+                .eq("id", profile.id);
 
-      const { error } = await supabase
-        .from('profiles')
-        .update({ wallet_address: address })
-        .eq('id', profile.id);
-
-      if (error) throw error;
-      await loadProfile();
-    } catch (error: any) {
-      console.error('Error updating wallet:', error);
-      setError(error.message || 'Failed to update wallet address');
-    } finally {
-      setLoading(false);
+            if (error) throw error;
+            await loadProfile();
+        } catch (error) {
+            console.error("Error updating wallet:", error);
+        } finally {
+            setLoading(false);
+        }
     }
-  }
 
-  async function handleSignOut() {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-    } catch (error: any) {
-      console.error('Error signing out:', error);
-      setError(error.message || 'Failed to sign out');
-    } finally {
-      setLoading(false);
+    async function handleSignOut() {
+        await supabase.auth.signOut();
     }
-  }
 
-  async function handlePasswordReset() {
-    try {
-      setLoading(true);
-      const { error } = await supabase.auth.resetPasswordForEmail(userEmail, {
-        redirectTo: `${window.location.origin}/auth`,
-      });
+    async function handlePasswordReset() {
+        try {
+            const { error } = await supabase.auth.resetPasswordForEmail(
+                userEmail,
+                {
+                    redirectTo: `${window.location.origin}/auth`,
+                }
+            );
 
-      if (error) throw error;
+            if (error) throw error;
 
-      setMessage({
-        type: 'success',
-        text: 'Password reset email has been sent to your inbox',
-      });
+            setMessage({
+                type: "success",
+                text: "Password reset email has been sent to your inbox",
+            });
 
-      setTimeout(() => setMessage(null), 5000);
-    } catch (error: any) {
-      setMessage({
-        type: 'error',
-        text: error.message || 'Failed to send reset email',
-      });
-    } finally {
-      setLoading(false);
+            setTimeout(() => setMessage(null), 5000);
+        } catch (error: any) {
+            setMessage({
+                type: "error",
+                text: error.message || "Failed to send reset email",
+            });
+        }
     }
-  }
 
-  function formatDate(dateString: string) {
-    if (!dateString) return 'Loading...';
-    const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    }).format(date);
-  }
+    function formatDate(dateString: string) {
+        if (!dateString) return "Loading...";
+        const date = new Date(dateString);
+        return new Intl.DateTimeFormat("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+        }).format(date);
+    }
 
-  if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-secondary-600 dark:text-secondary-400">Loading...</p>
-        </div>
-      </div>
-    );
-  }
+        <div className="max-w-4xl mx-auto px-4 py-8">
+            <div className="mb-8 flex justify-between items-center">
+                <div>
+                    <h1 className="text-3xl font-bold text-secondary-800 dark:text-secondary-200 mb-2">
+                        Account Settings
+                    </h1>
+                    <p className="text-secondary-600 dark:text-secondary-400">
+                        Manage your account preferences and connected services
+                    </p>
+                </div>
+                <button
+                    onClick={handleSignOut}
+                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                </button>
+            </div>
 
-  if (error) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 p-4 rounded-lg flex items-center">
-          <AlertCircle className="w-5 h-5 mr-2 flex-shrink-0" />
-          <p>{error}</p>
-        </div>
-      </div>
-    );
-  }
+            {message && (
+                <div
+                    className={`mb-6 p-4 rounded-lg flex items-center ${
+                        message.type === "success"
+                            ? "bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300"
+                            : "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300"
+                    }`}>
+                    <span className="text-sm">{message.text}</span>
+                </div>
+            )}
 
-  return (
-    <div className="max-w-4xl mx-auto px-4 py-6 md:py-8">
-      {/* Rest of the component remains the same */}
-      {/* ... */}
-    </div>
-  );
+            <div className="space-y-6">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-secondary-700 overflow-hidden">
+                    <div className="p-6 border-b border-secondary-200 dark:border-secondary-700">
+                        <div className="flex items-center space-x-2">
+                            <User className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                            <h2 className="text-xl font-semibold text-secondary-800 dark:text-secondary-200">
+                                Profile Information
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                        <div>
+                            <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                                Email Address
+                            </label>
+                            <p className="text-secondary-900 dark:text-secondary-100 bg-secondary-50 dark:bg-secondary-900 px-4 py-2.5 rounded-lg">
+                                {userEmail}
+                            </p>
+                        </div>
+                        <div>
+                            <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                                Member Since
+                            </label>
+                            <p className="text-secondary-900 dark:text-secondary-100 bg-secondary-50 dark:bg-secondary-900 px-4 py-2.5 rounded-lg">
+                                {formatDate(profile?.created_at)}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-secondary-700 overflow-hidden">
+                    <div className="p-6 border-b border-secondary-200 dark:border-secondary-700">
+                        <div className="flex items-center space-x-2">
+                            <Wallet className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                            <h2 className="text-xl font-semibold text-secondary-800 dark:text-secondary-200">
+                                Wallet Connection
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="p-6">
+                        {isConnected ? (
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-secondary-700 dark:text-secondary-300 mb-1">
+                                        Connected Wallet
+                                    </label>
+                                    <div className="flex items-center justify-between bg-secondary-50 dark:bg-secondary-900 px-4 py-2.5 rounded-lg">
+                                        <span className="text-secondary-900 dark:text-secondary-100 font-mono">
+                                            {address}
+                                        </span>
+                                        <button
+                                            onClick={() => disconnect()}
+                                            className="ml-4 px-3 py-1 text-sm font-medium text-red-600 dark:text-red-400 rounded-md hover:bg-red-50 dark:hover:bg-red-900/50 transition-colors">
+                                            Disconnect
+                                        </button>
+                                    </div>
+                                </div>
+                                <p className="text-sm text-secondary-600 dark:text-secondary-400">
+                                    Your wallet is successfully connected and
+                                    ready for transactions.
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="text-center py-4">
+                                <p className="text-secondary-600 dark:text-secondary-400 mb-4">
+                                    Connect your wallet to start tracking your
+                                    recycling impact
+                                </p>
+                                <button
+                                    onClick={() =>
+                                        connect({ connector: connectors[0] })
+                                    }
+                                    disabled={loading}
+                                    className="inline-flex items-center px-4 py-2 text-sm font-medium text-white bg-primary-600 dark:bg-primary-500 rounded-lg hover:bg-primary-700 dark:hover:bg-primary-600 focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors disabled:opacity-50">
+                                    <Wallet className="w-4 h-4 mr-2" />
+                                    {loading
+                                        ? "Connecting..."
+                                        : "Connect Wallet"}
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-secondary-200 dark:border-secondary-700 overflow-hidden">
+                    <div className="p-6 border-b border-secondary-200 dark:border-secondary-700">
+                        <div className="flex items-center space-x-2">
+                            <Shield className="w-5 h-5 text-primary-600 dark:text-primary-400" />
+                            <h2 className="text-xl font-semibold text-secondary-800 dark:text-secondary-200">
+                                Security
+                            </h2>
+                        </div>
+                    </div>
+                    <div className="p-6">
+                        <button
+                            onClick={handlePasswordReset}
+                            className="text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 font-medium">
+                            Change Password
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
 }
