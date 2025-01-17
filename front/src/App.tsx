@@ -44,7 +44,12 @@ function AppContent() {
         );
     }
 
-    if (!session && !isAuthPage) {
+    if (
+        !session &&
+        !isAuthPage &&
+        location.pathname !== "/" &&
+        location.pathname !== "/recycle-points"
+    ) {
         return <Navigate to="/auth" replace />;
     }
 

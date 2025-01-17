@@ -52,7 +52,12 @@ export function AuthForm() {
                 navigate("/");
             }
         } catch (error: any) {
-            setMessage({ type: "error", text: error.message });
+            if (error.message === "Failed to fetch")
+                setMessage({
+                    type: "error",
+                    text: "Server is not reachable. Please try again later.",
+                });
+            else setMessage({ type: "error", text: error.message });
         } finally {
             setLoading(false);
         }
